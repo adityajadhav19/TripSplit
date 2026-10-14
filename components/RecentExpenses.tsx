@@ -3,10 +3,16 @@
 export type Expense = {
   id: string;
   description: string;
-  amountPaise: number;
-  payerId: string;
-  participantIds?: string[]; // Made optional just in case the API misses it
-  createdAt?: string;        // Made optional
+  amount: number;
+  expenseDate: string;
+  payer: {
+    id: string;
+    name: string;
+  };
+  shares: {
+    memberId: string;
+    amount: number;
+  }[];
 };
 
 export type Member = {
@@ -22,7 +28,7 @@ type RecentExpensesProps = {
 // Utility to format INR safely
 function money(paise: number) {
   if (!paise || isNaN(paise)) return "₹0.00";
-  
+
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -32,7 +38,7 @@ function money(paise: number) {
 // Utility to format dates safely
 function formatDate(dateString?: string) {
   if (!dateString) return "Recently"; // Fallback if API doesn't send a date
-  
+
   try {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -43,16 +49,17 @@ function formatDate(dateString?: string) {
   }
 }
 
-export default function RecentExpenses({ 
-  expenses = [], 
-  members = [] 
+export default function RecentExpenses({
+  expenses = [],
+  members = []
 }: RecentExpensesProps) {
-  
+
   // Helper to find a member's name safely
   const getMemberName = (id: string) => {
     if (!members || !Array.isArray(members)) return "Unknown";
     return members.find((m) => m.id === id)?.name || "Unknown";
   };
+
 
   // Safe check for empty state
   if (!Array.isArray(expenses) || expenses.length === 0) {
@@ -73,13 +80,12 @@ export default function RecentExpenses({
     <div className="mt-6 divide-y divide-slate-100/80 rounded-2xl border border-slate-100 bg-slate-50/50">
       {expenses.map((expense) => {
         // Safe fallbacks for every property
-        const payerName = getMemberName(expense.payerId);
+        const payerName = expense.payer?.name || "Unknown";
         const description = expense.description || "Untitled Expense";
-        const participantsCount = Array.isArray(expense.participantIds) ? expense.participantIds.length : 0;
-        
+        const participantsCount = expense.shares?.length ?? 0;
         return (
-          <div 
-            key={expense.id || Math.random().toString()} 
+          <div
+            key={expense.id}
             className="flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
           >
             <div className="flex items-center gap-4">
@@ -87,12 +93,12 @@ export default function RecentExpenses({
               <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full bg-white font-bold text-emerald-700 shadow-sm ring-1 ring-slate-200/60">
                 {payerName.charAt(0).toUpperCase()}
               </div>
-              
+
               {/* Expense Details */}
               <div>
                 <p className="font-semibold text-slate-900">{description}</p>
                 <p className="mt-0.5 text-xs font-medium text-slate-500">
-                  Paid by <span className="font-semibold text-slate-700">{payerName}</span> • {formatDate(expense.createdAt)}
+                  Paid by <span className="font-semibold text-slate-700">{payerName}</span> • {formatDate(expense.expenseDate)}
                 </p>
               </div>
             </div>
@@ -100,7 +106,7 @@ export default function RecentExpenses({
             {/* Amount */}
             <div className="text-right">
               <p className="font-bold text-slate-900">
-                {money(expense.amountPaise)}
+                {money(expense.amount)}
               </p>
               <p className="mt-0.5 text-xs font-medium text-slate-500">
                 {participantsCount} {participantsCount === 1 ? 'person' : 'people'}

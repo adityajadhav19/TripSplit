@@ -34,8 +34,12 @@ export async function GET(
       );
     }
 
-    const group = await prisma.group.findUnique({
-      where: { id: session.groupId },
+    const group = await prisma.group.findFirst({
+      where: {
+        id: session.groupId,
+        groupCode: groupCode.toUpperCase(),
+        members: { some: { id: session.memberId } },
+      },
       select: {
         id: true,
         name: true,
@@ -64,10 +68,7 @@ export async function GET(
       },
     });
 
-    if (
-      !group ||
-      !group.members.some((member) => member.id === session.memberId)
-    ) {
+    if (!group) {
       return NextResponse.json(
         { error: "Group not found." },
         { status: 404 }

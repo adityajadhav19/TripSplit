@@ -27,10 +27,34 @@ export async function POST(
     ) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
+    let body: Record<string, unknown>;
 
-    const body = await request.json();
+    try {
+      const parsed: unknown = await request.json();
+
+      if (
+        parsed === null ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed)
+      ) {
+        return NextResponse.json(
+          { error: "Request body must be a JSON object." },
+          { status: 400 }
+        );
+      }
+
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request body." },
+        { status: 400 }
+      );
+    }
+
+
     const description =
       typeof body.description === "string" ? body.description.trim() : "";
+
     const amountPaise = body.amountPaise;
     const payerId = body.payerId;
     const participantIds = body.participantIds;
@@ -38,6 +62,7 @@ export async function POST(
     if (
       !description ||
       description.length > 100 ||
+      typeof amountPaise !== "number" ||
       !Number.isSafeInteger(amountPaise) ||
       amountPaise <= 0 ||
       amountPaise > 100_000_000 ||

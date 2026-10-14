@@ -6,14 +6,38 @@ import { createSessionToken } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        let body: Record<string, unknown>;
+
+        try {
+            const parsed: unknown = await request.json();
+
+            if (
+                parsed === null ||
+                typeof parsed !== "object" ||
+                Array.isArray(parsed)
+            ) {
+                return NextResponse.json(
+                    { error: "Request body must be a JSON object." },
+                    { status: 400 }
+                );
+            }
+
+            body = parsed as Record<string, unknown>;
+        } catch {
+            return NextResponse.json(
+                { error: "Invalid JSON request body." },
+                { status: 400 }
+            );
+        }
 
         const groupCode =
             typeof body.groupCode === "string"
                 ? body.groupCode.trim().toUpperCase()
                 : "";
         const name =
-            typeof body.name === "string" ? body.name.trim() : "";
+            typeof body.name === "string"
+                ? body.name.trim().replace(/\s+/g, " ").normalize("NFKC")
+                : "";
         const password =
             typeof body.password === "string" ? body.password : "";
 

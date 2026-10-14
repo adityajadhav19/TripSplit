@@ -1,8 +1,7 @@
 "use client";
-
+import { Suspense } from "react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-
 type Member = { id: string; name: string };
 
 function money(paise: number) {
@@ -13,6 +12,22 @@ function money(paise: number) {
 }
 
 export default function NewExpensePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-slate-50">
+          <p className="text-sm font-medium text-slate-500">
+            Loading expense form...
+          </p>
+        </main>
+      }
+    >
+      <NewExpenseContent />
+    </Suspense>
+  );
+}
+
+function NewExpenseContent() {
   const { groupCode } = useParams<{ groupCode: string }>();
   const router = useRouter();
 

@@ -13,18 +13,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
 });
-
 export const metadata: Metadata = {
   title: {
     default: "TripSplit — Split expenses, not friendships",
     template: "%s | TripSplit",
   },
   description:
-    "Track shared expenses, see who owes whom, and settle up easily with TripSplit.",
+    "Track shared trip expenses, split bills fairly, see who owes whom, and settle up easily with TripSplit.",
+
   applicationName: "TripSplit",
+
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
+
+  openGraph: {
+    type: "website",
+    siteName: "TripSplit",
+    title: "TripSplit — Split expenses, not friendships",
+    description:
+      "Track shared trip expenses, split bills fairly, and settle up easily with friends.",
+    url: "/",
+  },
+
   robots: {
     index: false,
     follow: false,

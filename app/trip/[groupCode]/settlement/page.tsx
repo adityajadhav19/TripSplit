@@ -1,40 +1,17 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-type MemberBalance = {
-  id: string;
-  name: string;
-  paid: number;
-  share: number;
-  balance: number;
-};
+import SettlementHeader from "@/components/settlement/SettlementHeader";
+import SettlementSummary from "@/components/settlement/SettlementSummary";
+import TransferList from "@/components/settlement/TransferList";
+import MemberBalances from "@/components/settlement/MemberBalances";
+import SettlementLoading from "@/components/settlement/SettlementLoading";
 
-type Transfer = {
-  fromId: string;
-  from: string;
-  toId: string;
-  to: string;
-  amount: number;
-};
+import type { SettlementData } from "@/lib/settlement/types";
 
-type SettlementData = {
-  group: { name: string; groupCode: string };
-  totalSpent: number;
-  members: MemberBalance[];
-  transfers: Transfer[];
-};
-
-function money(paise: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(paise / 100);
-}
-
-export default function SettlementPage() {
+function SettlementPageContent() {
   const { groupCode } = useParams<{ groupCode: string }>();
   const router = useRouter();
 
@@ -60,10 +37,15 @@ export default function SettlementPage() {
         }
 
         if (!response.ok) {
-          throw new Error(result.error || "Unable to calculate settlement.");
+          throw new Error(
+            result.error || "Unable to calculate settlement."
+          );
         }
 
-        if (!cancelled) setData(result);
+        if (!cancelled) {
+          setData(result);
+          setError("");
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -77,20 +59,19 @@ export default function SettlementPage() {
       }
     }
 
-    loadSettlement();
+    if (groupCode) {
+      loadSettlement();
+    } else {
+      setError("Invalid trip code.");
+      setLoading(false);
+    }
 
     return () => {
       cancelled = true;
     };
   }, [groupCode, router]);
 
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f7f7f4]">
-        <p className="text-zinc-500">Calculating balances...</p>
-      </main>
-    );
-  }
+  if (loading) return <SettlementLoading />;
 
   if (error || !data) {
     return (
@@ -99,8 +80,11 @@ export default function SettlementPage() {
           {error || "Settlement unavailable."}
         </p>
         <button
-          onClick={() => router.push(`/trip/${groupCode}`)}
-          className="rounded-xl bg-zinc-900 px-5 py-3 text-white"
+          type="button"
+          onClick={() =>
+            router.push(`/trip/${encodeURIComponent(groupCode)}`)
+          }
+          className="rounded-xl bg-zinc-900 px-5 py-3 font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-zinc-800 hover:shadow-lg active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
           Back to trip
         </button>
@@ -108,127 +92,51 @@ export default function SettlementPage() {
     );
   }
 
-  const settled = data.transfers.length === 0;
-
   return (
-    <main className="min-h-screen bg-[#f7f7f4] px-5 py-10 text-zinc-900">
-      <div className="mx-auto max-w-3xl">
-        <button
-          onClick={() => router.push(`/trip/${groupCode}`)}
-          className="mb-6 text-sm text-zinc-600 hover:text-zinc-900"
-        >
-          ← Back to trip
-        </button>
+    <main className="relative min-h-screen overflow-hidden bg-[#f7f7f4] px-4 py-6 text-zinc-900 sm:px-6 sm:py-10">
+      {/* Subtle background decoration */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-emerald-100/40 blur-3xl"
+      />
 
-        <div>
-          <p className="text-sm font-medium text-emerald-700">
-            {data.group.name.toUpperCase()}
-          </p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight">
-            Settle up
-          </h1>
-          <p className="mt-3 text-zinc-500">
-            Here's how to balance the expenses for everyone.
-          </p>
-        </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-amber-100/40 blur-3xl"
+      />
 
-        <div className="mt-8 rounded-3xl bg-emerald-800 p-6 text-white sm:p-8">
-          <p className="text-sm text-emerald-100">Total trip spending</p>
-          <p className="mt-2 text-4xl font-semibold">
-            {money(data.totalSpent)}
-          </p>
-          <p className="mt-3 text-sm text-emerald-100">
-            {data.members.length} members · {data.transfers.length} suggested{" "}
-            {data.transfers.length === 1 ? "payment" : "payments"}
-          </p>
-        </div>
+      <div className="relative mx-auto max-w-3xl">
+        <SettlementHeader
+          groupName={data.group.name}
+          groupCode={groupCode}
+        />
 
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold">Who pays whom?</h2>
+        <SettlementSummary
+          totalSpent={data.totalSpent}
+          memberCount={data.members.length}
+          transferCount={data.transfers.length}
+        />
 
-          {settled ? (
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-white p-7">
-              <p className="text-lg font-semibold text-emerald-800">
-                Everyone is settled.
-              </p>
-              <p className="mt-2 text-sm text-zinc-500">
-                There are no outstanding balances.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-3">
-              {data.transfers.map((transfer, index) => (
-                <div
-                  key={`${transfer.fromId}-${transfer.toId}-${index}`}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold">{transfer.from}</p>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Pays {transfer.to}
-                    </p>
-                  </div>
+        <TransferList transfers={data.transfers} />
 
-                  <div className="shrink-0 text-right">
-                    <p className="text-lg font-semibold">
-                      {money(transfer.amount)}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      Suggested transfer
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        <MemberBalances members={data.members} />
 
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold">Individual balances</h2>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-            {data.members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between gap-4 border-b border-zinc-100 px-5 py-4 last:border-b-0"
-              >
-                <div>
-                  <p className="font-medium">{member.name}</p>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Paid {money(member.paid)} · Share {money(member.share)}
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p
-                    className={`font-semibold ${
-                      member.balance > 0
-                        ? "text-emerald-700"
-                        : member.balance < 0
-                          ? "text-red-600"
-                          : "text-zinc-500"
-                    }`}
-                  >
-                    {member.balance > 0 ? "+" : ""}
-                    {money(member.balance)}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {member.balance > 0
-                      ? "Gets back"
-                      : member.balance < 0
-                        ? "Owes"
-                        : "Settled"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <p className="mt-6 text-sm leading-6 text-zinc-500">
-          These are suggested repayments, not actual transfers. Confirm with
-          your group before paying.
+        <p className="mt-8 flex items-start gap-2 border-t border-zinc-200/80 pt-5 pb-4 text-xs leading-6 text-zinc-500 sm:text-sm">
+          <span className="mt-0.5 shrink-0">ⓘ</span>
+          <span>
+            These are suggested repayments, not actual transfers. Confirm
+            with your group before paying.
+          </span>
         </p>
       </div>
     </main>
+  );
+}
+
+export default function SettlementPage() {
+  return (
+    <Suspense fallback={<SettlementLoading />}>
+      <SettlementPageContent />
+    </Suspense>
   );
 }
