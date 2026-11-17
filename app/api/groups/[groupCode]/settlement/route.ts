@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySessionToken } from "@/lib/session";
+import { refreshSessionCookie } from "@/lib/session-cookie";
 import { calculateSettlement } from "@/lib/settlement/calculated-settlement";
 
 export async function GET(
@@ -78,13 +79,14 @@ export async function GET(
 
     const settlement = calculateSettlement(group.members, group.expenses);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       group: {
         name: group.name,
         groupCode: group.groupCode,
       },
       ...settlement,
     });
+    return refreshSessionCookie(response, session);
   } catch (error) {
     console.error("Settlement calculation failed:", error);
 
