@@ -78,7 +78,7 @@ export async function GET(
       );
     }
 
-    const response = NextResponse.json({ group });
+    const response = NextResponse.json({ group, currentMemberId: session.memberId });
     return refreshSessionCookie(response, session);
   } catch (error) {
     console.error("Get group failed:", error);
