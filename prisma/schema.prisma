@@ -29,6 +29,7 @@ model Member {
   group          Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   paidExpenses   Expense[]      @relation("ExpensePayer")
   shares         ExpenseShare[]
+  createdExpenses Expense[] @relation("ExpenseCreator")
 
   @@unique([groupId, normalizedName])
   @@index([groupId])
@@ -43,8 +44,31 @@ model Expense {
   expenseDate DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdById String?
+  editedAt    DateTime?
 
-  group  Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer     Member         @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Restrict)
+  createdBy Member?        @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  shares    ExpenseShare[]
+
+  @@index([groupId, expenseDate])
+  @@index([payerId])
+  @@index([createdById])
+}
+
+  id        String @id @default(cuid())
+  expenseId String
+  memberId  String
+  amount    Int
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Restrict)
+
+  @@unique([expenseId, memberId])
+  @@index([memberId])
+}
+          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   payer  Member         @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Restrict)
   shares ExpenseShare[]
 
