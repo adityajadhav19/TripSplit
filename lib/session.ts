@@ -25,7 +25,7 @@ export async function createSessionToken(
   return new SignJWT({ memberId, groupId, groupCode })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(SESSION_DURATION_SECONDS)
+    .setExpirationTime("15d")
     .sign(key);
 }
 
