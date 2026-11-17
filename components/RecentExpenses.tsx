@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 export type Expense = {
   id: string;
@@ -98,7 +98,7 @@ export default function RecentExpenses({
     );
   }
 
-  async function saveExpense(event: React.FormEvent<HTMLFormElement>) {
+  async function saveExpense(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing) return;
 
