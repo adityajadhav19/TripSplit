@@ -130,6 +130,9 @@ export async function POST(
       select: {
         id: true,
         description: true,
+        createdById: true,
+        editedAt: true,
+        expenseDate: true,
         amount: true,
         payer: { select: { id: true, name: true } },
         shares: {
