@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,36 +19,42 @@ model Group {
 }
 
 model Member {
-  id             String   @id @default(cuid())
-  name           String
-  normalizedName String
-  groupId        String
-  createdAt      DateTime @default(now())
+  id              String         @id @default(cuid())
+  name            String
+  normalizedName  String
+  groupId         String
+  createdAt       DateTime       @default(now())
+  isGroupCreator  Boolean        @default(false)
 
-  group          Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  paidExpenses   Expense[]      @relation("ExpensePayer")
-  shares         ExpenseShare[]
+  group           Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paidExpenses    Expense[]      @relation("ExpensePayer")
+  shares          ExpenseShare[]
+  createdExpenses Expense[]      @relation("ExpenseCreator")
 
   @@unique([groupId, normalizedName])
   @@index([groupId])
 }
 
 model Expense {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   description String
   amount      Int
   groupId     String
   payerId     String
-  expenseDate DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  expenseDate DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdById String?
+  editedAt    DateTime?
 
-  group  Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  payer  Member         @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Restrict)
-  shares ExpenseShare[]
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer     Member         @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: Restrict)
+  createdBy Member?        @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  shares    ExpenseShare[]
 
   @@index([groupId, expenseDate])
   @@index([payerId])
+  @@index([createdById])
 }
 
 model ExpenseShare {

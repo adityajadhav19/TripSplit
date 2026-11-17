@@ -12,6 +12,7 @@ import { money } from "@/lib/settlement/format-money";
 type Member = {
   id: string;
   name: string;
+  isGroupCreator?: boolean;
 };
 
 type GroupData = {
@@ -40,6 +41,7 @@ function TripDashboardContent() {
   const groupCode = params?.groupCode || "";
 
   const [group, setGroup] = useState<GroupData | null>(null);
+  const [currentMemberId, setCurrentMemberId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,6 +58,7 @@ function TripDashboardContent() {
       }
 
       setGroup(data.group);
+      setCurrentMemberId(data.currentMemberId || "");
       setError("");
     } catch (err) {
       setError(
@@ -260,6 +263,9 @@ const totalSpent = group.expenses.reduce(
             <RecentExpenses
               expenses={group.expenses}
               members={group.members}
+              groupCode={groupCode}
+              currentMemberId={currentMemberId}
+              onChanged={fetchTripData}
             />
           )}
         </div>

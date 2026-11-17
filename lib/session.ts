@@ -1,6 +1,6 @@
-
 import { SignJWT, jwtVerify } from "jose";
 
+const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 15;
 const secret = process.env.SESSION_SECRET;
 
 if (!secret || Buffer.byteLength(secret, "utf8") < 32) {
@@ -15,6 +15,8 @@ export type SessionPayload = {
   groupCode: string;
 };
 
+export const SESSION_MAX_AGE = SESSION_DURATION_SECONDS;
+
 export async function createSessionToken(
   memberId: string,
   groupId: string,
@@ -23,8 +25,14 @@ export async function createSessionToken(
   return new SignJWT({ memberId, groupId, groupCode })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("15d")
     .sign(key);
+}
+
+export async function renewSessionToken(
+  session: SessionPayload
+): Promise<string> {
+  return createSessionToken(session.memberId, session.groupId, session.groupCode);
 }
 
 export async function verifySessionToken(

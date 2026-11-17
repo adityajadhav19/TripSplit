@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySessionToken } from "@/lib/session";
+import { refreshSessionCookie } from "@/lib/session-cookie";
 
 export async function GET(
   _request: NextRequest,
@@ -46,7 +47,7 @@ export async function GET(
         groupCode: true,
         createdAt: true,
         members: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, isGroupCreator: true },
           orderBy: { createdAt: "asc" },
         },
         expenses: {
@@ -55,6 +56,8 @@ export async function GET(
             description: true,
             amount: true,
             expenseDate: true,
+            createdById: true,
+            editedAt: true,
             payer: { select: { id: true, name: true } },
             shares: {
               select: {
@@ -75,7 +78,8 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ group });
+    const response = NextResponse.json({ group, currentMemberId: session.memberId });
+    return refreshSessionCookie(response, session);
   } catch (error) {
     console.error("Get group failed:", error);
     return NextResponse.json(
