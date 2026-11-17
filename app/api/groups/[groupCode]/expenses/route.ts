@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySessionToken } from "@/lib/session";
+import { refreshSessionCookie } from "@/lib/session-cookie";
 
 export async function POST(
   request: NextRequest,
@@ -123,6 +124,7 @@ export async function POST(
         amount: amountPaise,
         groupId: group.id,
         payerId,
+        createdById: session.memberId,
         shares: { create: shares },
       },
       select: {
@@ -136,7 +138,8 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ expense }, { status: 201 });
+    const response = NextResponse.json({ expense }, { status: 201 });
+    return refreshSessionCookie(response, session);
   } catch (error) {
     console.error("Create expense failed:", error);
     return NextResponse.json(
