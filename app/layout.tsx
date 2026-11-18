@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import PwaRegister from "@/components/pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,6 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
 });
+
 export const metadata: Metadata = {
   title: {
     default: "TripSplit — Split expenses, not friendships",
@@ -20,13 +22,10 @@ export const metadata: Metadata = {
   },
   description:
     "Track shared trip expenses, split bills fairly, see who owes whom, and settle up easily with TripSplit.",
-
   applicationName: "TripSplit",
-
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://tripsplit-split-expence.vercel.app/"
   ),
-
   openGraph: {
     type: "website",
     siteName: "TripSplit",
@@ -35,7 +34,6 @@ export const metadata: Metadata = {
       "Track shared trip expenses, split bills fairly, and settle up easily with friends.",
     url: "/",
   },
-
   robots: {
     index: false,
     follow: false,
@@ -46,7 +44,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   colorScheme: "light",
-  themeColor: "#f8faf9",
+  themeColor: "#0d9488",
 };
 
 export default function RootLayout({
@@ -59,7 +57,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="min-h-screen flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col">
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }
