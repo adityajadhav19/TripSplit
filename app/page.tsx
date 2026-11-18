@@ -197,7 +197,7 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto grid w-full max-w-6xl flex-grow grid-cols-1 items-center gap-8 px-4 pb-10 pt-10 sm:gap-10 sm:px-6 sm:pb-16 sm:pt-14 lg:grid-cols-[1.05fr_0.95fr] md:gap-10 lg:gap-16 lg:pb-24 lg:pt-20">
+      <section className="relative z-10 mx-auto grid w-full max-w-6xl flex-grow-0 grid-cols-1 items-start gap-6 px-4 pb-8 pt-6 sm:gap-8 sm:px-6 sm:pb-12 sm:pt-10 lg:flex-grow lg:grid-cols-[1.05fr_0.95fr] lg:items-center md:gap-10 lg:gap-16 lg:pb-24 lg:pt-20">
         <div className="flex min-w-0 flex-col justify-center">
           <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm backdrop-blur-sm">
             <span
